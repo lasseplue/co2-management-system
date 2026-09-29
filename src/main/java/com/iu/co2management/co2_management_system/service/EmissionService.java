@@ -30,7 +30,7 @@ public class EmissionService {
 
     public List<EmissionEntry> getEmissionsForOwnLocation(LocalDate from, LocalDate to) {
         AppUser currentUser = getCurrentUser();
-        return emissionEntryRepository.findByLocationIdAndDateBetween(currentUser.getLocation().getId(), from, to);
+        return emissionEntryRepository.findByLocationIdAndDateBetweenOrderByDateAsc(currentUser.getLocation().getId(), from, to);
     }
 
     public double getTotalKgCo2eForOwnLocation(LocalDate from, LocalDate to) {

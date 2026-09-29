@@ -17,9 +17,10 @@ import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
 
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.TreeMap;
 
 @Route("emissions")
 @PageTitle("Emissionsübersicht")
@@ -73,19 +74,26 @@ public class EmissionOverviewView extends VerticalLayout {
         double total = emissionService.getTotalKgCo2eForOwnLocation(from, to);
         totalLabel.setText("Gesamt im Zeitraum: %.2f kg CO₂e".formatted(total));
 
-        updateChart(entries);
+        updateChart(entries, from, to);
     }
 
-    private void updateChart(List<EmissionEntry> entries) {
-        List<EmissionEntry> sorted = entries.stream()
-                .sorted(Comparator.comparing(EmissionEntry::getDate))
-                .toList();
 
-        String labels = sorted.stream()
-                .map(e -> "\"" + e.getDate() + "\"")
+    private void updateChart(List<EmissionEntry> entries, LocalDate from, LocalDate to) {
+        Map<LocalDate, Double> totalsByDate = new TreeMap<>();
+        LocalDate cursor = from;
+        while (!cursor.isAfter(to)) {
+            totalsByDate.put(cursor, 0.0);
+            cursor = cursor.plusDays(1);
+        }
+        for (EmissionEntry entry : entries) {
+            totalsByDate.merge(entry.getDate(), entry.getAmountKgCo2e(), Double::sum);
+        }
+
+        String labels = totalsByDate.keySet().stream()
+                .map(date -> "\"" + date + "\"")
                 .collect(Collectors.joining(","));
-        String data = sorted.stream()
-                .map(e -> String.valueOf(e.getAmountKgCo2e()))
+        String data = totalsByDate.values().stream()
+                .map(String::valueOf)
                 .collect(Collectors.joining(","));
 
         String script = """
@@ -112,4 +120,5 @@ public class EmissionOverviewView extends VerticalLayout {
 
         getElement().executeJs(script);
     }
+
 }

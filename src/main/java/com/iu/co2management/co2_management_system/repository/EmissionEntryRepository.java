@@ -10,5 +10,5 @@ public interface EmissionEntryRepository extends JpaRepository<EmissionEntry, Lo
 
     List<EmissionEntry> findByLocationId(Long locationId);
 
-    List<EmissionEntry> findByLocationIdAndDateBetween(Long locationId, LocalDate from, LocalDate to);
+    List<EmissionEntry> findByLocationIdAndDateBetweenOrderByDateAsc(Long locationId, LocalDate from, LocalDate to);
 }
