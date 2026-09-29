@@ -85,7 +85,9 @@ public class EmissionEntryView extends VerticalLayout {
 
     private void clearForm() {
         categoryComboBox.clear();
+        categoryComboBox.setInvalid(false);
         amountField.clear();
+        amountField.setInvalid(false);
         dateField.setValue(LocalDate.now());
     }
 }
