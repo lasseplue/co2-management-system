@@ -4,6 +4,7 @@ import com.iu.co2management.co2_management_system.entity.AppUser;
 import com.iu.co2management.co2_management_system.entity.EmissionEntry;
 import com.iu.co2management.co2_management_system.repository.AppUserRepository;
 import com.iu.co2management.co2_management_system.repository.EmissionEntryRepository;
+import com.iu.co2management.co2_management_system.repository.LocationRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +16,14 @@ public class EmissionService {
 
     private final EmissionEntryRepository emissionEntryRepository;
     private final AppUserRepository appUserRepository;
+    private final LocationRepository locationRepository;
 
     public EmissionService(EmissionEntryRepository emissionEntryRepository,
-                           AppUserRepository appUserRepository) {
+                           AppUserRepository appUserRepository,
+                           LocationRepository locationRepository) {
         this.emissionEntryRepository = emissionEntryRepository;
         this.appUserRepository = appUserRepository;
+        this.locationRepository = locationRepository;
     }
 
     public EmissionEntry recordEmission(String category, double amountKgCo2e, LocalDate date) {
@@ -37,6 +41,19 @@ public class EmissionService {
         return getEmissionsForOwnLocation(from, to).stream()
                 .mapToDouble(EmissionEntry::getAmountKgCo2e)
                 .sum();
+    }
+
+    public List<LocationSummary> getAllLocationsSummary(LocalDate from, LocalDate to) {
+        return locationRepository.findAll().stream()
+                .map(location -> {
+                    double total = emissionEntryRepository
+                            .findByLocationIdAndDateBetweenOrderByDateAsc(location.getId(), from, to)
+                            .stream()
+                            .mapToDouble(EmissionEntry::getAmountKgCo2e)
+                            .sum();
+                    return new LocationSummary(location.getName(), total);
+                })
+                .toList();
     }
 
     private AppUser getCurrentUser() {
