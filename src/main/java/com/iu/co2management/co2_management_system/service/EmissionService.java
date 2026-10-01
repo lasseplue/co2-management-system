@@ -58,8 +58,12 @@ public class EmissionService {
 
     private AppUser getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return appUserRepository.findByEmail(email)
+        return appUserRepository.findByEmailWithLocation(email)
                 .orElseThrow(() -> new IllegalStateException(
                         "Eingeloggter Benutzer nicht in der Datenbank gefunden: " + email));
+    }
+
+    public String getCurrentUserLocationName() {
+        return getCurrentUser().getLocation().getName();
     }
 }

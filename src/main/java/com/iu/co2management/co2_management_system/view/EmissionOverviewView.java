@@ -15,6 +15,7 @@ import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import com.vaadin.flow.component.html.Span;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -30,6 +31,7 @@ public class EmissionOverviewView extends VerticalLayout {
 
     private final EmissionService emissionService;
 
+    private final Span locationLabel = new Span();
     private final DatePicker fromField = new DatePicker("Von");
     private final DatePicker toField = new DatePicker("Bis");
     private final Grid<EmissionEntry> grid = new Grid<>(EmissionEntry.class, false);
@@ -38,6 +40,7 @@ public class EmissionOverviewView extends VerticalLayout {
 
     public EmissionOverviewView(EmissionService emissionService) {
         this.emissionService = emissionService;
+        locationLabel.setText("Standort: " + emissionService.getCurrentUserLocationName());
 
         fromField.setValue(LocalDate.now().minusDays(30));
         toField.setValue(LocalDate.now());
@@ -56,7 +59,7 @@ public class EmissionOverviewView extends VerticalLayout {
         canvasElement.setAttribute("id", "emissionChartCanvas");
         chartContainer.getElement().appendChild(canvasElement);
 
-        add(new H2("Emissionsübersicht"), filterLayout, grid, totalLabel, chartContainer);
+        add(new H2("Emissionsübersicht"), locationLabel, filterLayout, grid, totalLabel, chartContainer);
 
         refresh();
     }
