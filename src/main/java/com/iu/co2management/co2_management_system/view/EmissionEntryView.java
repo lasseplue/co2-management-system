@@ -29,7 +29,7 @@ public class EmissionEntryView extends VerticalLayout {
     public EmissionEntryView(EmissionService emissionService) {
         this.emissionService = emissionService;
 
-        categoryComboBox.setItems(List.of("Strom", "Heizung", "Mobilität", "Sonstiges"));
+        categoryComboBox.setItems(EmissionService.CATEGORIES);
         categoryComboBox.setRequiredIndicatorVisible(true);
 
         amountField.setMin(0);

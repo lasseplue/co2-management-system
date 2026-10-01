@@ -14,6 +14,7 @@ import java.util.List;
 @Service
 public class EmissionService {
 
+    public static final List<String> CATEGORIES = List.of("Strom", "Heizung", "Mobilität", "Sonstiges");
     private final EmissionEntryRepository emissionEntryRepository;
     private final AppUserRepository appUserRepository;
     private final LocationRepository locationRepository;
