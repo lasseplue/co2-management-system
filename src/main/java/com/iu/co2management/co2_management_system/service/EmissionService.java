@@ -7,6 +7,11 @@ import com.iu.co2management.co2_management_system.repository.EmissionEntryReposi
 import com.iu.co2management.co2_management_system.repository.LocationRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import com.iu.co2management.co2_management_system.entity.Location;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.GrantedAuthority;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,6 +20,9 @@ import java.util.List;
 public class EmissionService {
 
     public static final List<String> CATEGORIES = List.of("Strom", "Heizung", "Mobilität", "Sonstiges");
+    private static final Set<String> READ_ALL_ROLES = Set.of("ADMIN", "EXECUTIVE");
+    private static final Set<String> WRITE_ALL_ROLES = Set.of("ADMIN");
+    private static final Set<String> RECORD_ROLES = Set.of("SUSTAINABILITY_OFFICER", "ADMIN");
     private final EmissionEntryRepository emissionEntryRepository;
     private final AppUserRepository appUserRepository;
     private final LocationRepository locationRepository;
@@ -55,6 +63,48 @@ public class EmissionService {
                     return new LocationSummary(location.getName(), total);
                 })
                 .toList();
+    }
+    public boolean canReadAllLocations() {
+        return hasAnyRole(READ_ALL_ROLES);
+    }
+
+    public boolean canWriteAllLocations() {
+        return hasAnyRole(WRITE_ALL_ROLES);
+    }
+
+    public boolean canRecordEmissions() {
+        return hasAnyRole(RECORD_ROLES);
+    }
+
+    public List<Location> getAllLocations() {
+        requireAnyRole(READ_ALL_ROLES);
+        return locationRepository.findAll();
+    }
+
+    public List<EmissionEntry> getEmissionsForLocation(Long locationId, LocalDate from, LocalDate to) {
+        requireAnyRole(READ_ALL_ROLES);
+        return emissionEntryRepository.findByLocationIdAndDateBetweenOrderByDateAsc(locationId, from, to);
+    }
+
+    public EmissionEntry recordEmissionForLocation(Long locationId, String category, double amountKgCo2e, LocalDate date) {
+        requireAnyRole(WRITE_ALL_ROLES);
+        Location location = locationRepository.findById(locationId)
+                .orElseThrow(() -> new IllegalArgumentException("Standort nicht gefunden: " + locationId));
+        EmissionEntry entry = new EmissionEntry(category, amountKgCo2e, date, location, getCurrentUser());
+        return emissionEntryRepository.save(entry);
+    }
+
+    private boolean hasAnyRole(Set<String> roles) {
+        Set<String> authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toSet());
+        return roles.stream().anyMatch(role -> authorities.contains("ROLE_" + role));
+    }
+
+    private void requireAnyRole(Set<String> roles) {
+        if (!hasAnyRole(roles)) {
+            throw new AccessDeniedException("Keine Berechtigung für standortübergreifenden Zugriff");
+        }
     }
 
     private AppUser getCurrentUser() {

@@ -1,7 +1,11 @@
 package com.iu.co2management.co2_management_system.view;
 
+import com.iu.co2management.co2_management_system.entity.Location;
 import com.iu.co2management.co2_management_system.service.EmissionCsvService;
+import com.iu.co2management.co2_management_system.service.EmissionService;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
@@ -19,24 +23,33 @@ import jakarta.annotation.security.RolesAllowed;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.List;
 
 @Route(value = "csv", layout = MainLayout.class)
 @PageTitle("CSV Import/Export")
-@RolesAllowed({"SUSTAINABILITY_OFFICER", "ADMIN"})
+@RolesAllowed({"SUSTAINABILITY_OFFICER", "EXECUTIVE", "ADMIN"})
 public class CsvView extends VerticalLayout {
 
     private final EmissionCsvService csvService;
 
     private final TextArea csvArea = new TextArea("CSV-Daten (Kategorie;Menge;Datum)");
+    private final ComboBox<Location> importLocationBox = new ComboBox<>("Ziel-Standort");
     private final Div resultBox = new Div();
+    private final ComboBox<Location> exportLocationBox = new ComboBox<>("Standort");
+    private final Checkbox allLocationsBox = new Checkbox("Alle Standorte (mit zusätzlicher Spalte \"Standort\")");
     private final DatePicker exportFromField = new DatePicker("Von (leer = unbegrenzt)");
     private final DatePicker exportToField = new DatePicker("Bis (leer = unbegrenzt)");
 
-    private LocalDate exportFrom = LocalDate.now().minusYears(1);
-    private LocalDate exportTo = LocalDate.now();
+    private volatile LocalDate exportFrom = LocalDate.now().minusYears(1);
+    private volatile LocalDate exportTo = LocalDate.now();
+    private volatile Long exportLocationId;
+    private volatile boolean exportAll;
 
-    public CsvView(EmissionCsvService csvService) {
+    public CsvView(EmissionCsvService csvService, EmissionService emissionService) {
         this.csvService = csvService;
+
+        boolean canReadAll = emissionService.canReadAllLocations();
+        boolean canWriteAll = emissionService.canWriteAllLocations();
 
         csvArea.setWidthFull();
         csvArea.setMinHeight("200px");
@@ -49,16 +62,54 @@ public class CsvView extends VerticalLayout {
         exportFromField.addValueChangeListener(event -> exportFrom = event.getValue());
         exportToField.addValueChangeListener(event -> exportTo = event.getValue());
 
+        if (canReadAll) {
+            List<Location> locations = emissionService.getAllLocations();
+
+            exportLocationBox.setItems(locations);
+            exportLocationBox.setItemLabelGenerator(Location::getName);
+            exportLocationBox.setPlaceholder("Eigener Standort");
+            exportLocationBox.setClearButtonVisible(true);
+            exportLocationBox.addValueChangeListener(event ->
+                    exportLocationId = event.getValue() == null ? null : event.getValue().getId());
+
+            allLocationsBox.addValueChangeListener(event -> {
+                exportAll = event.getValue();
+                exportLocationBox.setEnabled(!event.getValue());
+            });
+
+            if (canWriteAll) {
+                importLocationBox.setItems(locations);
+                importLocationBox.setItemLabelGenerator(Location::getName);
+                importLocationBox.setPlaceholder("Eigener Standort");
+                importLocationBox.setClearButtonVisible(true);
+            }
+        }
+
         Anchor exportLink = new Anchor(DownloadHandler.fromInputStream(event -> {
             LocalDate from = exportFrom != null ? exportFrom : LocalDate.of(1900, 1, 1);
             LocalDate to = exportTo != null ? exportTo : LocalDate.of(9999, 12, 31);
-            byte[] data = csvService.exportCsv(from, to).getBytes(StandardCharsets.UTF_8);
+            String csv = exportAll
+                    ? csvService.exportAllLocationsCsv(from, to)
+                    : csvService.exportCsv(from, to, exportLocationId);
+            byte[] data = csv.getBytes(StandardCharsets.UTF_8);
             return new DownloadResponse(new ByteArrayInputStream(data), "emissionen.csv", "text/csv", data.length);
         }, "emissionen.csv"), "CSV herunterladen");
 
-        add(new H2("CSV Import/Export"),
-                new H3("Import"), csvArea, importButton, resultBox,
-                new H3("Export"), new HorizontalLayout(exportFromField, exportToField), exportLink);
+        add(new H2("CSV Import/Export"));
+
+        if (emissionService.canRecordEmissions()) {
+            add(new H3("Import"));
+            if (canWriteAll) {
+                add(importLocationBox);
+            }
+            add(csvArea, importButton, resultBox);
+        }
+
+        add(new H3("Export"));
+        if (canReadAll) {
+            add(exportLocationBox, allLocationsBox);
+        }
+        add(new HorizontalLayout(exportFromField, exportToField), exportLink);
     }
 
     private void importData() {
@@ -69,9 +120,13 @@ public class CsvView extends VerticalLayout {
             return;
         }
 
-        EmissionCsvService.ImportResult result = csvService.importCsv(text);
+        Location target = importLocationBox.getValue();
+        Long targetId = target == null ? null : target.getId();
+
+        EmissionCsvService.ImportResult result = csvService.importCsv(text, targetId);
         if (result.errors().isEmpty()) {
-            resultBox.add(new Div(result.importedCount() + " Einträge importiert."));
+            String where = target == null ? "den eigenen Standort" : "Standort " + target.getName();
+            resultBox.add(new Div(result.importedCount() + " Einträge für " + where + " importiert."));
             csvArea.clear();
         } else {
             resultBox.add(errorLine("Import abgebrochen, es wurde nichts gespeichert:"));

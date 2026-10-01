@@ -3,13 +3,16 @@ package com.iu.co2management.co2_management_system.service;
 import com.iu.co2management.co2_management_system.entity.EmissionEntry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.iu.co2management.co2_management_system.entity.Location;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+
 
 @Service
 public class EmissionCsvService {
@@ -20,7 +23,8 @@ public class EmissionCsvService {
     private record ParsedRow(String category, double amount, LocalDate date) {
     }
 
-    private static final DateTimeFormatter GERMAN_DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final DateTimeFormatter GERMAN_DATE =
+            DateTimeFormatter.ofPattern("dd.MM.uuuu").withResolverStyle(ResolverStyle.STRICT);
 
     private final EmissionService emissionService;
 
@@ -29,7 +33,7 @@ public class EmissionCsvService {
     }
 
     @Transactional
-    public ImportResult importCsv(String csvText) {
+    public ImportResult importCsv(String csvText, Long locationId) {
         List<ParsedRow> rows = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         String[] lines = csvText.replace("\uFEFF", "").split("\\R");
@@ -80,20 +84,47 @@ public class EmissionCsvService {
             return new ImportResult(0, errors);
         }
 
-        rows.forEach(row -> emissionService.recordEmission(row.category(), row.amount(), row.date()));
+        rows.forEach(row -> {
+            if (locationId == null) {
+                emissionService.recordEmission(row.category(), row.amount(), row.date());
+            } else {
+                emissionService.recordEmissionForLocation(locationId, row.category(), row.amount(), row.date());
+            }
+        });
         return new ImportResult(rows.size(), List.of());
     }
 
-    public String exportCsv(LocalDate from, LocalDate to) {
+    public String exportCsv(LocalDate from, LocalDate to, Long locationId) {
+        List<EmissionEntry> entries = locationId == null
+                ? emissionService.getEmissionsForOwnLocation(from, to)
+                : emissionService.getEmissionsForLocation(locationId, from, to);
+
         StringBuilder csv = new StringBuilder("\uFEFFKategorie;Menge (kg CO2e);Datum\n");
-        for (EmissionEntry entry : emissionService.getEmissionsForOwnLocation(from, to)) {
-            csv.append(entry.getCategory()).append(';')
-                    .append(BigDecimal.valueOf(entry.getAmountKgCo2e()).toPlainString().replace('.', ','))
-                    .append(';')
-                    .append(entry.getDate())
-                    .append('\n');
+        entries.forEach(entry -> csv.append(formatRow(entry)).append('\n'));
+        return csv.toString();
+    }
+
+    public String exportAllLocationsCsv(LocalDate from, LocalDate to) {
+        StringBuilder csv = new StringBuilder("\uFEFFStandort;Kategorie;Menge (kg CO2e);Datum\n");
+        for (Location location : emissionService.getAllLocations()) {
+            for (EmissionEntry entry : emissionService.getEmissionsForLocation(location.getId(), from, to)) {
+                csv.append(escape(location.getName())).append(';').append(formatRow(entry)).append('\n');
+            }
         }
         return csv.toString();
+    }
+
+    private String formatRow(EmissionEntry entry) {
+        return entry.getCategory() + ";"
+                + BigDecimal.valueOf(entry.getAmountKgCo2e()).toPlainString().replace('.', ',')
+                + ";" + entry.getDate();
+    }
+
+    private String escape(String value) {
+        if (value.contains(";") || value.contains("\"") || value.contains("\n")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
     }
 
     private String findCategory(String text) {
@@ -116,7 +147,7 @@ public class EmissionCsvService {
         try {
             return LocalDate.parse(text);
         } catch (DateTimeParseException ignored) {
-            // zweiter Versuch mit deutschem Format
+
         }
         try {
             return LocalDate.parse(text, GERMAN_DATE);
