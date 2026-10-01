@@ -15,7 +15,7 @@ import jakarta.annotation.security.RolesAllowed;
 import java.time.LocalDate;
 import java.util.List;
 
-@Route("emission-entry")
+@Route(value = "emission-entry", layout = MainLayout.class)
 @PageTitle("Emissionen erfassen")
 @RolesAllowed({"SUSTAINABILITY_OFFICER", "ADMIN"})
 public class EmissionEntryView extends VerticalLayout {

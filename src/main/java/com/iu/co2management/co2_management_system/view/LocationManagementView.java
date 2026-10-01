@@ -16,7 +16,7 @@ import jakarta.annotation.security.RolesAllowed;
 import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.ValueContext;
 
-@Route("locations")
+@Route(value = "locations", layout = MainLayout.class)
 @PageTitle("Standorte")
 @RolesAllowed("ADMIN")
 public class LocationManagementView extends VerticalLayout {

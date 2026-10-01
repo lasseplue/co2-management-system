@@ -29,7 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.stream.Collectors;
 
-@Route("users")
+@Route(value = "users", layout = MainLayout.class)
 @PageTitle("Benutzerverwaltung")
 @RolesAllowed("ADMIN")
 public class UserManagementView extends VerticalLayout {

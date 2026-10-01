@@ -19,7 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Route("executive-overview")
+@Route(value = "executive-overview", layout = MainLayout.class)
 @PageTitle("Standortübergreifende Übersicht")
 @RolesAllowed({"EXECUTIVE", "ADMIN"})
 @JavaScript("https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js")
