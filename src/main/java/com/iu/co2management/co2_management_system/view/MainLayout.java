@@ -8,7 +8,6 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.spring.security.AuthenticationContext;
-import com.vaadin.flow.component.notification.Notification;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,7 +45,7 @@ public class MainLayout extends AppLayout {
             nav.addItem(new SideNavItem("Emissionen erfassen", EmissionEntryView.class));
         }
         if (roles.contains("ROLE_SUSTAINABILITY_OFFICER") || roles.contains("ROLE_EXECUTIVE") || roles.contains("ROLE_ADMIN")) {
-            nav.addItem(new SideNavItem("CSV Import/Export", CsvView.class));
+            nav.addItem(new SideNavItem("Import&Export", ImportExportView.class));
         }
         if (roles.contains("ROLE_EXECUTIVE") || roles.contains("ROLE_ADMIN")) {
             nav.addItem(new SideNavItem("Standortübergreifende Übersicht", ExecutiveOverviewView.class));

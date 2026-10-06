@@ -2,6 +2,7 @@ package com.iu.co2management.co2_management_system.view;
 
 import com.iu.co2management.co2_management_system.entity.Location;
 import com.iu.co2management.co2_management_system.service.EmissionCsvService;
+import com.iu.co2management.co2_management_system.service.EmissionExportService;
 import com.iu.co2management.co2_management_system.service.EmissionService;
 
 import com.vaadin.flow.component.button.Button;
@@ -12,6 +13,7 @@ import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -19,7 +21,6 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.DownloadHandler;
 import com.vaadin.flow.server.streams.DownloadResponse;
-import com.vaadin.flow.component.notification.Notification;
 
 import jakarta.annotation.security.RolesAllowed;
 
@@ -29,10 +30,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 
-@Route(value = "csv", layout = MainLayout.class)
-@PageTitle("CSV Import/Export")
+@Route(value = "import-export", layout = MainLayout.class)
+@PageTitle("Import/Export")
 @RolesAllowed({"SUSTAINABILITY_OFFICER", "EXECUTIVE", "ADMIN"})
-public class CsvView extends VerticalLayout {
+public class ImportExportView extends VerticalLayout {
 
     private final EmissionCsvService csvService;
 
@@ -49,7 +50,9 @@ public class CsvView extends VerticalLayout {
     private volatile Long exportLocationId;
     private volatile boolean exportAll;
 
-    public CsvView(EmissionCsvService csvService, EmissionService emissionService) {
+    public ImportExportView(EmissionCsvService csvService,
+                            EmissionService emissionService,
+                            EmissionExportService exportService) {
         this.csvService = csvService;
 
         boolean canReadAll = emissionService.canReadAllLocations();
@@ -89,7 +92,7 @@ public class CsvView extends VerticalLayout {
             }
         }
 
-        Anchor exportLink = new Anchor(DownloadHandler.fromInputStream(event -> {
+        Anchor csvLink = new Anchor(DownloadHandler.fromInputStream(event -> {
             LocalDate from = exportFrom != null ? exportFrom : LocalDate.of(1900, 1, 1);
             LocalDate to = exportTo != null ? exportTo : LocalDate.of(9999, 12, 31);
             String csv = exportAll
@@ -99,7 +102,15 @@ public class CsvView extends VerticalLayout {
             return new DownloadResponse(new ByteArrayInputStream(data), "emissionen.csv", "text/csv", data.length);
         }, "emissionen.csv"), "CSV herunterladen");
 
-        add(new H2("CSV Import/Export"));
+        Anchor pdfLink = new Anchor(DownloadHandler.fromInputStream(event -> {
+            LocalDate from = exportFrom != null ? exportFrom : LocalDate.of(1900, 1, 1);
+            LocalDate to = exportTo != null ? exportTo : LocalDate.of(9999, 12, 31);
+            byte[] data = exportService.exportPdf(from, to, exportLocationId, exportAll);
+            return new DownloadResponse(new ByteArrayInputStream(data), "emissionsbericht.pdf",
+                    "application/pdf", data.length);
+        }, "emissionsbericht.pdf"), "PDF herunterladen");
+
+        add(new H2("Import/Export"));
 
         if (emissionService.canRecordEmissions()) {
             add(new H3("Import"));
@@ -113,7 +124,7 @@ public class CsvView extends VerticalLayout {
         if (canReadAll) {
             add(exportLocationBox, allLocationsBox);
         }
-        add(new HorizontalLayout(exportFromField, exportToField), exportLink);
+        add(new HorizontalLayout(exportFromField, exportToField), new HorizontalLayout(csvLink, pdfLink));
     }
 
     private void importData() {
