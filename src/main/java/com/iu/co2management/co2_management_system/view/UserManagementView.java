@@ -9,6 +9,7 @@ import com.iu.co2management.co2_management_system.repository.LocationRepository;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
@@ -133,19 +134,25 @@ public class UserManagementView extends VerticalLayout {
     }
 
     private void delete() {
-        if (selectedUser != null && selectedUser.getId() != null) {
-            String name = selectedUser.getName();
-            try {
-                appUserRepository.delete(selectedUser);
-            } catch (DataIntegrityViolationException e) {
-                Notification.show("„" + name + "“ kann nicht gelöscht werden, es gibt noch zugehörige Emissionseinträge.",
-                        5000, Notification.Position.MIDDLE);
-                return;
-            }
+        if (selectedUser == null || selectedUser.getId() == null) {
+            return;
+        }
+        Long id = selectedUser.getId();
+        String name = selectedUser.getName();
+
+        ConfirmDialog dialog = new ConfirmDialog();
+        dialog.setHeader("Benutzer:in löschen?");
+        dialog.setText("„" + name + "“ wird unwiderruflich gelöscht. Bereits erfasste Emissionseinträge bleiben "
+                + "erhalten, verlieren aber die Zuordnung zu dieser Person.");
+        dialog.setCancelable(true);
+        dialog.setConfirmText("Löschen");
+        dialog.addConfirmListener(event -> {
+            appUserRepository.deleteById(id);
             Notification.show("Benutzer:in „" + name + "“ gelöscht", 3000, Notification.Position.BOTTOM_START);
             refreshGrid();
             clearForm();
-        }
+        });
+        dialog.open();
     }
 
     private void clearForm() {

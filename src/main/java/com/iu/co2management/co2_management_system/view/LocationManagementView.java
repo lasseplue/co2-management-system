@@ -6,6 +6,7 @@ import com.iu.co2management.co2_management_system.repository.EmissionEntryReposi
 import com.iu.co2management.co2_management_system.repository.LocationRepository;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -92,19 +93,28 @@ public class LocationManagementView extends VerticalLayout {
         if (selectedLocation == null || selectedLocation.getId() == null) {
             return;
         }
-        String name = selectedLocation.getName();
         Long id = selectedLocation.getId();
+        String name = selectedLocation.getName();
 
-        if (appUserRepository.existsByLocationId(id) || emissionEntryRepository.existsByLocationId(id)) {
-            Notification.show("„" + name + "“ kann nicht gelöscht werden, es gibt noch zugehörige Benutzer oder Emissionseinträge.",
+        if (appUserRepository.existsByLocationId(id)) {
+            Notification.show("„" + name + "“ kann nicht gelöscht werden, es sind noch Benutzer zugeordnet. "
+                            + "Bitte diese zuerst löschen oder einem anderen Standort zuweisen.",
                     5000, Notification.Position.MIDDLE);
             return;
         }
 
-        locationRepository.delete(selectedLocation);
-        Notification.show("Standort „" + name + "“ gelöscht", 3000, Notification.Position.BOTTOM_START);
-        refreshGrid();
-        clearForm();
+        ConfirmDialog dialog = new ConfirmDialog();
+        dialog.setHeader("Standort löschen?");
+        dialog.setText("Der Standort „" + name + "“ und alle zugehörigen Emissionseinträge werden unwiderruflich gelöscht.");
+        dialog.setCancelable(true);
+        dialog.setConfirmText("Löschen");
+        dialog.addConfirmListener(event -> {
+            locationRepository.deleteById(id);
+            Notification.show("Standort „" + name + "“ gelöscht", 3000, Notification.Position.BOTTOM_START);
+            refreshGrid();
+            clearForm();
+        });
+        dialog.open();
     }
 
     private void clearForm() {
