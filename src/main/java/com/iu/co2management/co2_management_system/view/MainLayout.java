@@ -38,11 +38,8 @@ public class MainLayout extends AppLayout {
         Set<String> roles = currentUserRoles();
 
         SideNav nav = new SideNav();
-        nav.addItem(new SideNavItem("Start", HomeView.class));
+        nav.addItem(new SideNavItem("Emissionsübersicht", EmissionOverviewView.class));
 
-        if (roles.contains("ROLE_USER") || roles.contains("ROLE_SUSTAINABILITY_OFFICER") || roles.contains("ROLE_ADMIN")) {
-            nav.addItem(new SideNavItem("Emissionsübersicht", EmissionOverviewView.class));
-        }
         if (roles.contains("ROLE_SUSTAINABILITY_OFFICER") || roles.contains("ROLE_ADMIN")) {
             nav.addItem(new SideNavItem("Emissionen erfassen", EmissionEntryView.class));
         }

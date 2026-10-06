@@ -23,9 +23,9 @@ import java.util.stream.Collectors;
 import java.util.Map;
 import java.util.TreeMap;
 
-@Route(value = "emissions", layout = MainLayout.class)
+@Route(value = "", layout = MainLayout.class)
 @PageTitle("Emissionsübersicht")
-@RolesAllowed({"USER", "SUSTAINABILITY_OFFICER", "ADMIN"})
+@RolesAllowed({"USER", "SUSTAINABILITY_OFFICER", "EXECUTIVE", "ADMIN"})
 @JavaScript("https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js")
 public class EmissionOverviewView extends VerticalLayout {
 
