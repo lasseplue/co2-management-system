@@ -44,9 +44,9 @@ public class MainLayout extends AppLayout {
         if (roles.contains("ROLE_SUSTAINABILITY_OFFICER") || roles.contains("ROLE_ADMIN")) {
             nav.addItem(new SideNavItem("Emissionen erfassen", EmissionEntryView.class));
         }
-        if (roles.contains("ROLE_SUSTAINABILITY_OFFICER") || roles.contains("ROLE_EXECUTIVE") || roles.contains("ROLE_ADMIN")) {
-            nav.addItem(new SideNavItem("Import&Export", ImportExportView.class));
-        }
+
+        nav.addItem(new SideNavItem("Import&Export", ImportExportView.class));
+
         if (roles.contains("ROLE_EXECUTIVE") || roles.contains("ROLE_ADMIN")) {
             nav.addItem(new SideNavItem("Standortübergreifende Übersicht", ExecutiveOverviewView.class));
         }

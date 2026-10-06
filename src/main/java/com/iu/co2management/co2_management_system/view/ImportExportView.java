@@ -32,7 +32,7 @@ import java.util.List;
 
 @Route(value = "import-export", layout = MainLayout.class)
 @PageTitle("Import/Export")
-@RolesAllowed({"SUSTAINABILITY_OFFICER", "EXECUTIVE", "ADMIN"})
+@RolesAllowed({"USER", "SUSTAINABILITY_OFFICER", "EXECUTIVE", "ADMIN"})
 public class ImportExportView extends VerticalLayout {
 
     private final EmissionCsvService csvService;
@@ -92,7 +92,7 @@ public class ImportExportView extends VerticalLayout {
             }
         }
 
-        Anchor csvLink = new Anchor(DownloadHandler.fromInputStream(event -> {
+        Anchor csvDownload = new Anchor(DownloadHandler.fromInputStream(event -> {
             LocalDate from = exportFrom != null ? exportFrom : LocalDate.of(1900, 1, 1);
             LocalDate to = exportTo != null ? exportTo : LocalDate.of(9999, 12, 31);
             String csv = exportAll
@@ -100,15 +100,17 @@ public class ImportExportView extends VerticalLayout {
                     : csvService.exportCsv(from, to, exportLocationId);
             byte[] data = csv.getBytes(StandardCharsets.UTF_8);
             return new DownloadResponse(new ByteArrayInputStream(data), "emissionen.csv", "text/csv", data.length);
-        }, "emissionen.csv"), "CSV herunterladen");
+        }, "emissionen.csv"), "");
+        csvDownload.add(new Button("CSV herunterladen"));
 
-        Anchor pdfLink = new Anchor(DownloadHandler.fromInputStream(event -> {
+        Anchor pdfDownload = new Anchor(DownloadHandler.fromInputStream(event -> {
             LocalDate from = exportFrom != null ? exportFrom : LocalDate.of(1900, 1, 1);
             LocalDate to = exportTo != null ? exportTo : LocalDate.of(9999, 12, 31);
             byte[] data = exportService.exportPdf(from, to, exportLocationId, exportAll);
             return new DownloadResponse(new ByteArrayInputStream(data), "emissionsbericht.pdf",
                     "application/pdf", data.length);
-        }, "emissionsbericht.pdf"), "PDF herunterladen");
+        }, "emissionsbericht.pdf"), "");
+        pdfDownload.add(new Button("PDF herunterladen"));
 
         add(new H2("Import/Export"));
 
@@ -124,7 +126,8 @@ public class ImportExportView extends VerticalLayout {
         if (canReadAll) {
             add(exportLocationBox, allLocationsBox);
         }
-        add(new HorizontalLayout(exportFromField, exportToField), new HorizontalLayout(csvLink, pdfLink));
+
+        add(new HorizontalLayout(exportFromField, exportToField), new HorizontalLayout(csvDownload, pdfDownload));
     }
 
     private void importData() {
