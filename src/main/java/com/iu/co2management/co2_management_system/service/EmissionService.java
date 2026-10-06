@@ -53,6 +53,7 @@ public class EmissionService {
     }
 
     public List<LocationSummary> getAllLocationsSummary(LocalDate from, LocalDate to) {
+        requireAnyRole(READ_ALL_ROLES);
         return locationRepository.findAll().stream()
                 .map(location -> {
                     double total = emissionEntryRepository

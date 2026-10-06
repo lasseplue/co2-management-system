@@ -47,9 +47,6 @@ public class MainLayout extends AppLayout {
 
         nav.addItem(new SideNavItem("Import&Export", ImportExportView.class));
 
-        if (roles.contains("ROLE_EXECUTIVE") || roles.contains("ROLE_ADMIN")) {
-            nav.addItem(new SideNavItem("Standortübergreifende Übersicht", ExecutiveOverviewView.class));
-        }
         if (roles.contains("ROLE_ADMIN")) {
             nav.addItem(new SideNavItem("Standorte", LocationManagementView.class));
             nav.addItem(new SideNavItem("Benutzer", UserManagementView.class));
