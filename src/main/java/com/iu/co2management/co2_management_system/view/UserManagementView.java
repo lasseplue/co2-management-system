@@ -5,6 +5,7 @@ import com.iu.co2management.co2_management_system.entity.Location;
 import com.iu.co2management.co2_management_system.entity.Role;
 import com.iu.co2management.co2_management_system.repository.AppUserRepository;
 import com.iu.co2management.co2_management_system.repository.LocationRepository;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -24,8 +25,10 @@ import com.vaadin.flow.data.binder.ValueContext;
 import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.stream.Collectors;
 
@@ -103,7 +106,8 @@ public class UserManagementView extends VerticalLayout {
     }
 
     private void save() {
-        if (selectedUser == null) {
+        boolean isNew = selectedUser == null;
+        if (isNew) {
             if (passwordField.isEmpty()) {
                 Notification.show("Für neue Benutzer:innen ist ein Passwort erforderlich");
                 return;
@@ -122,13 +126,23 @@ public class UserManagementView extends VerticalLayout {
         selectedUser.getRoles().addAll(rolesField.getValue());
 
         appUserRepository.save(selectedUser);
+        Notification.show("Benutzer:in „" + selectedUser.getName() + "“ "
+                + (isNew ? "angelegt" : "aktualisiert"), 3000, Notification.Position.BOTTOM_START);
         refreshGrid();
         clearForm();
     }
 
     private void delete() {
         if (selectedUser != null && selectedUser.getId() != null) {
-            appUserRepository.delete(selectedUser);
+            String name = selectedUser.getName();
+            try {
+                appUserRepository.delete(selectedUser);
+            } catch (DataIntegrityViolationException e) {
+                Notification.show("„" + name + "“ kann nicht gelöscht werden, es gibt noch zugehörige Emissionseinträge.",
+                        5000, Notification.Position.MIDDLE);
+                return;
+            }
+            Notification.show("Benutzer:in „" + name + "“ gelöscht", 3000, Notification.Position.BOTTOM_START);
             refreshGrid();
             clearForm();
         }

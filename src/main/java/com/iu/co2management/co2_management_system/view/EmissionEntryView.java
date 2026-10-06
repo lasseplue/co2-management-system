@@ -1,6 +1,7 @@
 package com.iu.co2management.co2_management_system.view;
 
 import com.iu.co2management.co2_management_system.service.EmissionService;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -10,6 +11,8 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.component.notification.Notification;
+
 import jakarta.annotation.security.RolesAllowed;
 
 import java.time.LocalDate;
@@ -80,6 +83,7 @@ public class EmissionEntryView extends VerticalLayout {
         }
 
         emissionService.recordEmission(category, amount, date);
+        Notification.show("Emission erfasst: " + amount + " kg CO2e am " + date, 3000, Notification.Position.BOTTOM_START);
         clearForm();
     }
 

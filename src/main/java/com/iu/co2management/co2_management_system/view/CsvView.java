@@ -3,6 +3,7 @@ package com.iu.co2management.co2_management_system.view;
 import com.iu.co2management.co2_management_system.entity.Location;
 import com.iu.co2management.co2_management_system.service.EmissionCsvService;
 import com.iu.co2management.co2_management_system.service.EmissionService;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -18,12 +19,15 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.DownloadHandler;
 import com.vaadin.flow.server.streams.DownloadResponse;
+import com.vaadin.flow.component.notification.Notification;
+
 import jakarta.annotation.security.RolesAllowed;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
+
 
 @Route(value = "csv", layout = MainLayout.class)
 @PageTitle("CSV Import/Export")
@@ -127,10 +131,12 @@ public class CsvView extends VerticalLayout {
         if (result.errors().isEmpty()) {
             String where = target == null ? "den eigenen Standort" : "Standort " + target.getName();
             resultBox.add(new Div(result.importedCount() + " Einträge für " + where + " importiert."));
+            Notification.show(result.importedCount() + " Einträge importiert", 3000, Notification.Position.BOTTOM_START);
             csvArea.clear();
         } else {
             resultBox.add(errorLine("Import abgebrochen, es wurde nichts gespeichert:"));
             result.errors().forEach(error -> resultBox.add(errorLine(error)));
+            Notification.show("Import abgebrochen, bitte Fehler prüfen", 4000, Notification.Position.MIDDLE);
         }
     }
 

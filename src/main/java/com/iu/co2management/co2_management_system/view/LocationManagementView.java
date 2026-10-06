@@ -2,6 +2,7 @@ package com.iu.co2management.co2_management_system.view;
 
 import com.iu.co2management.co2_management_system.entity.Location;
 import com.iu.co2management.co2_management_system.repository.LocationRepository;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
@@ -12,9 +13,12 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import jakarta.annotation.security.RolesAllowed;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.ValueContext;
+
+import jakarta.annotation.security.RolesAllowed;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @Route(value = "locations", layout = MainLayout.class)
 @PageTitle("Standorte")
@@ -59,7 +63,8 @@ public class LocationManagementView extends VerticalLayout {
     }
 
     private void save() {
-        if (selectedLocation == null) {
+        boolean isNew = selectedLocation == null;
+        if (isNew) {
             selectedLocation = new Location(nameField.getValue());
         }
         try {
@@ -68,13 +73,23 @@ public class LocationManagementView extends VerticalLayout {
             return;
         }
         locationRepository.save(selectedLocation);
+        Notification.show("Standort „" + selectedLocation.getName() + "“ "
+                + (isNew ? "angelegt" : "aktualisiert"), 3000, Notification.Position.BOTTOM_START);
         refreshGrid();
         clearForm();
     }
 
     private void delete() {
         if (selectedLocation != null && selectedLocation.getId() != null) {
-            locationRepository.delete(selectedLocation);
+            String name = selectedLocation.getName();
+            try {
+                locationRepository.delete(selectedLocation);
+            } catch (DataIntegrityViolationException e) {
+                Notification.show("„" + name + "“ kann nicht gelöscht werden, es gibt noch zugehörige Benutzer oder Emissionseinträge.",
+                        5000, Notification.Position.MIDDLE);
+                return;
+            }
+            Notification.show("Standort „" + name + "“ gelöscht", 3000, Notification.Position.BOTTOM_START);
             refreshGrid();
             clearForm();
         }
