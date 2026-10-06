@@ -17,7 +17,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
-import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.DownloadHandler;
 import com.vaadin.flow.server.streams.DownloadResponse;
@@ -31,10 +31,10 @@ import java.util.List;
 
 
 @Route(value = "import-export", layout = MainLayout.class)
-@PageTitle("Import/Export")
 @RolesAllowed({"USER", "SUSTAINABILITY_OFFICER", "EXECUTIVE", "ADMIN"})
-public class ImportExportView extends VerticalLayout {
+public class ImportExportView extends VerticalLayout implements HasDynamicTitle {
 
+    private final String title;
     private final EmissionCsvService csvService;
 
     private final TextArea csvArea = new TextArea("CSV-Daten (Kategorie;Menge;Datum)");
@@ -112,22 +112,30 @@ public class ImportExportView extends VerticalLayout {
         }, "emissionsbericht.pdf"), "");
         pdfDownload.add(new Button("PDF herunterladen"));
 
-        add(new H2("Import/Export"));
+        boolean canImport = emissionService.canRecordEmissions();
+        title = canImport ? "Import/Export" : "Export";
 
-        if (emissionService.canRecordEmissions()) {
+        add(new H2(canImport ? "Import und Export" : "Export"));
+
+        if (canImport) {
             add(new H3("Import"));
             if (canWriteAll) {
                 add(importLocationBox);
             }
             add(csvArea, importButton, resultBox);
+            add(new H3("Export"));
         }
 
-        add(new H3("Export"));
         if (canReadAll) {
             add(exportLocationBox, allLocationsBox);
         }
 
         add(new HorizontalLayout(exportFromField, exportToField), new HorizontalLayout(csvDownload, pdfDownload));
+    }
+
+    @Override
+    public String getPageTitle() {
+        return title;
     }
 
     private void importData() {

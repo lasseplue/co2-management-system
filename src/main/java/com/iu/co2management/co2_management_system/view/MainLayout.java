@@ -45,7 +45,13 @@ public class MainLayout extends AppLayout {
             nav.addItem(new SideNavItem("Emissionen erfassen", EmissionEntryView.class));
         }
 
-        nav.addItem(new SideNavItem("Import&Export", ImportExportView.class));
+        boolean canRecord = roles.contains("ROLE_SUSTAINABILITY_OFFICER") || roles.contains("ROLE_ADMIN");
+
+        if (canRecord) {
+            nav.addItem(new SideNavItem("Emissionen erfassen", EmissionEntryView.class));
+        }
+
+        nav.addItem(new SideNavItem(canRecord ? "Import/Export" : "Export", ImportExportView.class));
 
         if (roles.contains("ROLE_ADMIN")) {
             nav.addItem(new SideNavItem("Standorte", LocationManagementView.class));
