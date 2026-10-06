@@ -1,6 +1,10 @@
 package com.iu.co2management.co2_management_system.repository;
 
 import com.iu.co2management.co2_management_system.entity.EmissionEntry;
+
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
@@ -11,4 +15,8 @@ public interface EmissionEntryRepository extends JpaRepository<EmissionEntry, Lo
     List<EmissionEntry> findByLocationId(Long locationId);
 
     List<EmissionEntry> findByLocationIdAndDateBetweenOrderByDateAsc(Long locationId, LocalDate from, LocalDate to);
+
+    boolean existsByLocationId(Long locationId);
+
+
 }

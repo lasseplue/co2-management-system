@@ -1,6 +1,8 @@
 package com.iu.co2management.co2_management_system.view;
 
 import com.iu.co2management.co2_management_system.entity.Location;
+import com.iu.co2management.co2_management_system.repository.AppUserRepository;
+import com.iu.co2management.co2_management_system.repository.EmissionEntryRepository;
 import com.iu.co2management.co2_management_system.repository.LocationRepository;
 
 import com.vaadin.flow.component.button.Button;
@@ -26,6 +28,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 public class LocationManagementView extends VerticalLayout {
 
     private final LocationRepository locationRepository;
+    private final AppUserRepository appUserRepository;
+    private final EmissionEntryRepository emissionEntryRepository;
 
     private final Grid<Location> grid = new Grid<>(Location.class, false);
     private final TextField nameField = new TextField("Name");
@@ -33,8 +37,13 @@ public class LocationManagementView extends VerticalLayout {
 
     private Location selectedLocation;
 
-    public LocationManagementView(LocationRepository locationRepository) {
+    public LocationManagementView(LocationRepository locationRepository,
+                                  AppUserRepository appUserRepository,
+                                  EmissionEntryRepository emissionEntryRepository) {
+
         this.locationRepository = locationRepository;
+        this.appUserRepository = appUserRepository;
+        this.emissionEntryRepository = emissionEntryRepository;
 
         grid.addColumn(Location::getName).setHeader("Name");
         grid.addSelectionListener(event -> {
@@ -80,19 +89,22 @@ public class LocationManagementView extends VerticalLayout {
     }
 
     private void delete() {
-        if (selectedLocation != null && selectedLocation.getId() != null) {
-            String name = selectedLocation.getName();
-            try {
-                locationRepository.delete(selectedLocation);
-            } catch (DataIntegrityViolationException e) {
-                Notification.show("„" + name + "“ kann nicht gelöscht werden, es gibt noch zugehörige Benutzer oder Emissionseinträge.",
-                        5000, Notification.Position.MIDDLE);
-                return;
-            }
-            Notification.show("Standort „" + name + "“ gelöscht", 3000, Notification.Position.BOTTOM_START);
-            refreshGrid();
-            clearForm();
+        if (selectedLocation == null || selectedLocation.getId() == null) {
+            return;
         }
+        String name = selectedLocation.getName();
+        Long id = selectedLocation.getId();
+
+        if (appUserRepository.existsByLocationId(id) || emissionEntryRepository.existsByLocationId(id)) {
+            Notification.show("„" + name + "“ kann nicht gelöscht werden, es gibt noch zugehörige Benutzer oder Emissionseinträge.",
+                    5000, Notification.Position.MIDDLE);
+            return;
+        }
+
+        locationRepository.delete(selectedLocation);
+        Notification.show("Standort „" + name + "“ gelöscht", 3000, Notification.Position.BOTTOM_START);
+        refreshGrid();
+        clearForm();
     }
 
     private void clearForm() {

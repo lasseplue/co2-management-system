@@ -11,6 +11,8 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
 
     Optional<AppUser> findByEmail(String email);
 
+    boolean existsByLocationId(Long locationId);
+
     @Query("SELECT u FROM AppUser u JOIN FETCH u.location")
     List<AppUser> findAllWithLocation();
 
