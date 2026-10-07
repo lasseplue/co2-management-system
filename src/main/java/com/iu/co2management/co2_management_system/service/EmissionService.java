@@ -36,6 +36,7 @@ public class EmissionService {
     }
 
     public EmissionEntry recordEmission(String category, double amountKgCo2e, LocalDate date) {
+        requireAnyRole(RECORD_ROLES);
         AppUser currentUser = getCurrentUser();
         EmissionEntry entry = new EmissionEntry(category, amountKgCo2e, date, currentUser.getLocation(), currentUser);
         return emissionEntryRepository.save(entry);
