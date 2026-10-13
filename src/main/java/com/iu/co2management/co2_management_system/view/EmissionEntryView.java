@@ -16,6 +16,7 @@ import jakarta.annotation.security.RolesAllowed;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 @Route(value = "emission-entry", layout = MainLayout.class)
 @PageTitle("Emissionen erfassen")
@@ -83,7 +84,8 @@ public class EmissionEntryView extends VerticalLayout {
         }
 
         emissionService.recordEmission(category, amount, date);
-        Notifications.success("Emission erfasst: " + amount + " kg CO2e am " + date.format(GERMAN_DATE));
+        Notifications.success(String.format(Locale.GERMAN, "Emission erfasst: %.2f kg CO₂e am %s",
+                amount, date.format(GERMAN_DATE)));
         clearForm();
     }
 

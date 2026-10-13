@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 @Route(value = "", layout = MainLayout.class)
 @PageTitle("Emissionsübersicht")
@@ -113,7 +114,8 @@ public class EmissionOverviewView extends VerticalLayout {
         chartsRow.getStyle().set("flex-wrap", "wrap");
 
         grid.addColumn(row -> row.entry().getCategory()).setHeader(new Html("<b>Kategorie</b>"));
-        grid.addColumn(row -> row.entry().getAmountKgCo2e()).setHeader(new Html("<b>Menge (kg CO₂e)</b>"));
+        grid.addColumn(row -> String.format(Locale.GERMAN, "%.2f", row.entry().getAmountKgCo2e()))
+                .setHeader(new Html("<b>Menge (kg CO₂e)</b>"));
         grid.addColumn(row -> row.entry().getDate().format(GERMAN_DATE)).setHeader(new Html("<b>Datum</b>"));
         grid.addColumn(Row::locationName).setHeader(new Html("<b>Standort</b>"));
         add(new H2("Emissionsübersicht"), locationLabel, topRow, chartsRow, grid);
@@ -182,7 +184,7 @@ public class EmissionOverviewView extends VerticalLayout {
         grid.setItems(rows);
 
         double total = rows.stream().mapToDouble(row -> row.entry().getAmountKgCo2e()).sum();
-        totalLabel.setText("Gesamt im Zeitraum: %.2f kg CO₂e".formatted(total));
+        totalLabel.setText(String.format(Locale.GERMAN, "Gesamt im Zeitraum: %.2f kg CO₂e", total));
 
         locationChartCard.setVisible(all);
         if (all) {

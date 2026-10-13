@@ -34,12 +34,6 @@ public class EmissionExportService {
     public EmissionExportService(EmissionService emissionService) {
         this.emissionService = emissionService;
     }
-
-    /**
-     * locationId == null: eigener Standort; locationId gesetzt: gewählter Standort (nur ADMIN/EXECUTIVE);
-     * allLocations == true: alle Standorte mit zusätzlicher Spalte (nur ADMIN/EXECUTIVE).
-     * Die Rechteprüfung passiert in den aufgerufenen EmissionService-Methoden.
-     */
     public byte[] exportPdf(LocalDate from, LocalDate to, Long locationId, boolean allLocations) {
         List<Row> rows = new ArrayList<>();
         String scope;
@@ -130,7 +124,7 @@ public class EmissionExportService {
     }
 
     private String formatAmount(double amount) {
-        return String.format(Locale.GERMAN, "%,.2f", amount);
+        return String.format(Locale.GERMAN, "%.2f", amount);
     }
 
     /** Die View ersetzt leere Datumsfelder durch 1900 bzw. 9999; im Bericht soll dann "unbegrenzt" stehen. */
