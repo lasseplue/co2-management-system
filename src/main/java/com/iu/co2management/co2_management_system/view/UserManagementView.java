@@ -29,7 +29,6 @@ import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.stream.Collectors;
 
@@ -118,6 +117,9 @@ public class UserManagementView extends VerticalLayout {
         try {
             binder.writeBean(selectedUser);
         } catch (ValidationException e) {
+            if (isNew) {
+                selectedUser = null;
+            }
             return;
         }
         if (!passwordField.isEmpty()) {

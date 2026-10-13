@@ -18,7 +18,7 @@ public final class Notifications {
     }
 
     public static void error(String text) {
-        Notification notification = Notification.show(text, ERROR_MS, Notification.Position.MIDDLE);
+        Notification notification = Notification.show(text, ERROR_MS, Notification.Position.BOTTOM_START);
         notification.addThemeVariants(NotificationVariant.ERROR);
     }
 }

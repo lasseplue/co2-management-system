@@ -105,7 +105,7 @@ public class EmissionService {
 
     private void requireAnyRole(Set<String> roles) {
         if (!hasAnyRole(roles)) {
-            throw new AccessDeniedException("Keine Berechtigung für standortübergreifenden Zugriff");
+            throw new AccessDeniedException("Keine Berechtigung für diese Aktion");
         }
     }
 

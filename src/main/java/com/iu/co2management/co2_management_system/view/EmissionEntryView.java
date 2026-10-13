@@ -15,7 +15,7 @@ import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.time.format.DateTimeFormatter;
 
 @Route(value = "emission-entry", layout = MainLayout.class)
 @PageTitle("Emissionen erfassen")
@@ -27,6 +27,7 @@ public class EmissionEntryView extends VerticalLayout {
     private final ComboBox<String> categoryComboBox = new ComboBox<>("Kategorie");
     private final NumberField amountField = new NumberField("Menge (kg CO₂e)");
     private final DatePicker dateField = new DatePicker("Datum");
+    private static final DateTimeFormatter GERMAN_DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     public EmissionEntryView(EmissionService emissionService) {
         this.emissionService = emissionService;
@@ -82,7 +83,7 @@ public class EmissionEntryView extends VerticalLayout {
         }
 
         emissionService.recordEmission(category, amount, date);
-        Notifications.success("Emission erfasst: " + amount + " kg CO2e am " + date);
+        Notifications.success("Emission erfasst: " + amount + " kg CO2e am " + date.format(GERMAN_DATE));
         clearForm();
     }
 

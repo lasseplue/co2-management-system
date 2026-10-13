@@ -6,7 +6,6 @@ import com.iu.co2management.co2_management_system.service.EmissionExportService;
 import com.iu.co2management.co2_management_system.service.EmissionService;
 
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.Anchor;
@@ -26,6 +25,7 @@ import jakarta.annotation.security.RolesAllowed;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -33,14 +33,19 @@ import java.util.List;
 @RolesAllowed({"USER", "SUSTAINABILITY_OFFICER", "EXECUTIVE", "ADMIN"})
 public class ImportExportView extends VerticalLayout implements HasDynamicTitle {
 
+    /** Eintrag im Standort-Dropdown; location == null bedeutet "Alle Standorte". */
+    private record LocationOption(Location location, String label) {
+    }
+
+    private static final LocationOption ALL_LOCATIONS = new LocationOption(null, "Alle Standorte");
+
     private final String title;
     private final EmissionCsvService csvService;
 
     private final TextArea csvArea = new TextArea("CSV-Daten (Kategorie;Menge;Datum)");
     private final ComboBox<Location> importLocationBox = new ComboBox<>("Ziel-Standort");
     private final Div resultBox = new Div();
-    private final ComboBox<Location> exportLocationBox = new ComboBox<>("Standort");
-    private final Checkbox allLocationsBox = new Checkbox("Alle Standorte (mit zusätzlicher Spalte \"Standort\")");
+    private final ComboBox<LocationOption> exportLocationBox = new ComboBox<>("Standort");
     private final DatePicker exportFromField = new DatePicker("Von (leer = unbegrenzt)");
     private final DatePicker exportToField = new DatePicker("Bis (leer = unbegrenzt)");
 
@@ -71,16 +76,19 @@ public class ImportExportView extends VerticalLayout implements HasDynamicTitle 
         if (canReadAll) {
             List<Location> locations = emissionService.getAllLocations();
 
-            exportLocationBox.setItems(locations);
-            exportLocationBox.setItemLabelGenerator(Location::getName);
+            List<LocationOption> options = new ArrayList<>();
+            options.add(ALL_LOCATIONS);
+            locations.forEach(location -> options.add(new LocationOption(location, location.getName())));
+
+            exportLocationBox.setItems(options);
+            exportLocationBox.setItemLabelGenerator(LocationOption::label);
             exportLocationBox.setPlaceholder("Eigener Standort");
             exportLocationBox.setClearButtonVisible(true);
-            exportLocationBox.addValueChangeListener(event ->
-                    exportLocationId = event.getValue() == null ? null : event.getValue().getId());
-
-            allLocationsBox.addValueChangeListener(event -> {
-                exportAll = event.getValue();
-                exportLocationBox.setEnabled(!event.getValue());
+            exportLocationBox.setHelperText("„Alle Standorte“ ergänzt im Export eine Spalte „Standort“");
+            exportLocationBox.addValueChangeListener(event -> {
+                LocationOption option = event.getValue();
+                exportAll = option == ALL_LOCATIONS;
+                exportLocationId = (option == null || exportAll) ? null : option.location().getId();
             });
 
             if (canWriteAll) {
@@ -126,7 +134,7 @@ public class ImportExportView extends VerticalLayout implements HasDynamicTitle 
         }
 
         if (canReadAll) {
-            add(exportLocationBox, allLocationsBox);
+            add(exportLocationBox);
         }
 
         add(new HorizontalLayout(exportFromField, exportToField), new HorizontalLayout(csvDownload, pdfDownload));
@@ -163,7 +171,7 @@ public class ImportExportView extends VerticalLayout implements HasDynamicTitle 
 
     private Div errorLine(String text) {
         Div line = new Div(text);
-        line.getStyle().set("color", "#c62828");
+        line.getStyle().set("color", "var(--lumo-error-text-color)");
         return line;
     }
 }

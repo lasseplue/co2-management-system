@@ -27,6 +27,7 @@ public class EmissionEntry {
     private LocalDate date;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Location location;
 

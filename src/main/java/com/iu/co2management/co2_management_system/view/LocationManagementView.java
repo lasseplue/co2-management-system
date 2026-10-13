@@ -2,7 +2,6 @@ package com.iu.co2management.co2_management_system.view;
 
 import com.iu.co2management.co2_management_system.entity.Location;
 import com.iu.co2management.co2_management_system.repository.AppUserRepository;
-import com.iu.co2management.co2_management_system.repository.EmissionEntryRepository;
 import com.iu.co2management.co2_management_system.repository.LocationRepository;
 
 import com.vaadin.flow.component.Html;
@@ -21,7 +20,6 @@ import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.ValueContext;
 
 import jakarta.annotation.security.RolesAllowed;
-import org.springframework.dao.DataIntegrityViolationException;
 
 @Route(value = "locations", layout = MainLayout.class)
 @PageTitle("Standorte")
@@ -30,7 +28,6 @@ public class LocationManagementView extends VerticalLayout {
 
     private final LocationRepository locationRepository;
     private final AppUserRepository appUserRepository;
-    private final EmissionEntryRepository emissionEntryRepository;
 
     private final Grid<Location> grid = new Grid<>(Location.class, false);
     private final TextField nameField = new TextField("Name");
@@ -39,12 +36,10 @@ public class LocationManagementView extends VerticalLayout {
     private Location selectedLocation;
 
     public LocationManagementView(LocationRepository locationRepository,
-                                  AppUserRepository appUserRepository,
-                                  EmissionEntryRepository emissionEntryRepository) {
+                                  AppUserRepository appUserRepository) {
 
         this.locationRepository = locationRepository;
         this.appUserRepository = appUserRepository;
-        this.emissionEntryRepository = emissionEntryRepository;
 
         grid.addColumn(Location::getName).setHeader(new Html("<b>Name</b>"));
         grid.addSelectionListener(event -> {
@@ -80,6 +75,9 @@ public class LocationManagementView extends VerticalLayout {
         try {
             binder.writeBean(selectedLocation);
         } catch (ValidationException e) {
+            if (isNew) {
+                selectedLocation = null;
+            }
             return;
         }
         locationRepository.save(selectedLocation);

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.time.format.DateTimeFormatter;
 
 @Route(value = "", layout = MainLayout.class)
 @PageTitle("Emissionsübersicht")
@@ -43,6 +44,7 @@ public class EmissionOverviewView extends VerticalLayout {
 
     private static final String LOCATION_CANVAS_ID = "locationChartCanvas";
     private static final String TIME_CANVAS_ID = "emissionChartCanvas";
+    private static final DateTimeFormatter GERMAN_DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     private final EmissionService emissionService;
 
@@ -112,7 +114,7 @@ public class EmissionOverviewView extends VerticalLayout {
 
         grid.addColumn(row -> row.entry().getCategory()).setHeader(new Html("<b>Kategorie</b>"));
         grid.addColumn(row -> row.entry().getAmountKgCo2e()).setHeader(new Html("<b>Menge (kg CO₂e)</b>"));
-        grid.addColumn(row -> row.entry().getDate()).setHeader(new Html("<b>Datum</b>"));
+        grid.addColumn(row -> row.entry().getDate().format(GERMAN_DATE)).setHeader(new Html("<b>Datum</b>"));
         grid.addColumn(Row::locationName).setHeader(new Html("<b>Standort</b>"));
         add(new H2("Emissionsübersicht"), locationLabel, topRow, chartsRow, grid);
 
@@ -202,7 +204,7 @@ public class EmissionOverviewView extends VerticalLayout {
         }
 
         String labels = totalsByDate.keySet().stream()
-                .map(date -> "\"" + date + "\"")
+                .map(date -> "\"" + date.format(GERMAN_DATE) + "\"")
                 .collect(Collectors.joining(","));
         String data = totalsByDate.values().stream()
                 .map(String::valueOf)
@@ -213,7 +215,7 @@ public class EmissionOverviewView extends VerticalLayout {
 
     private void updateLocationChart(List<LocationSummary> summaries) {
         String labels = summaries.stream()
-                .map(s -> "\"" + s.locationName() + "\"")
+                .map(s -> jsString(s.locationName()))
                 .collect(Collectors.joining(","));
         String data = summaries.stream()
                 .map(s -> String.valueOf(s.totalKgCo2e()))
@@ -252,5 +254,11 @@ public class EmissionOverviewView extends VerticalLayout {
                 """.formatted(canvasId, instanceName, labels, data, color);
 
         getElement().executeJs(script);
+    }
+
+    private static String jsString(String value) {
+        return "\"" + value.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n") + "\"";
     }
 }
