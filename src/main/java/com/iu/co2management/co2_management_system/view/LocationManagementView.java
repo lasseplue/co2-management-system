@@ -5,6 +5,7 @@ import com.iu.co2management.co2_management_system.repository.AppUserRepository;
 import com.iu.co2management.co2_management_system.repository.EmissionEntryRepository;
 import com.iu.co2management.co2_management_system.repository.LocationRepository;
 
+import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.grid.Grid;
@@ -16,7 +17,6 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.ValueContext;
 
@@ -46,7 +46,7 @@ public class LocationManagementView extends VerticalLayout {
         this.appUserRepository = appUserRepository;
         this.emissionEntryRepository = emissionEntryRepository;
 
-        grid.addColumn(Location::getName).setHeader("Name");
+        grid.addColumn(Location::getName).setHeader(new Html("<b>Name</b>"));
         grid.addSelectionListener(event -> {
             selectedLocation = event.getFirstSelectedItem().orElse(null);
             if (selectedLocation != null) {
@@ -83,8 +83,8 @@ public class LocationManagementView extends VerticalLayout {
             return;
         }
         locationRepository.save(selectedLocation);
-        Notification.show("Standort „" + selectedLocation.getName() + "“ "
-                + (isNew ? "angelegt" : "aktualisiert"), 3000, Notification.Position.BOTTOM_START);
+        Notifications.success("Standort „" + selectedLocation.getName() + "“ "
+                + (isNew ? "angelegt" : "aktualisiert"));
         refreshGrid();
         clearForm();
     }
@@ -97,9 +97,8 @@ public class LocationManagementView extends VerticalLayout {
         String name = selectedLocation.getName();
 
         if (appUserRepository.existsByLocationId(id)) {
-            Notification.show("„" + name + "“ kann nicht gelöscht werden, es sind noch Benutzer zugeordnet. "
-                            + "Bitte diese zuerst löschen oder einem anderen Standort zuweisen.",
-                    5000, Notification.Position.MIDDLE);
+            Notifications.error("„" + name + "“ kann nicht gelöscht werden, es sind noch Benutzer zugeordnet. "
+                    + "Bitte diese zuerst löschen oder einem anderen Standort zuweisen.");
             return;
         }
 
@@ -110,7 +109,7 @@ public class LocationManagementView extends VerticalLayout {
         dialog.setConfirmText("Löschen");
         dialog.addConfirmListener(event -> {
             locationRepository.deleteById(id);
-            Notification.show("Standort „" + name + "“ gelöscht", 3000, Notification.Position.BOTTOM_START);
+            Notifications.success("Standort „" + name + "“ gelöscht");
             refreshGrid();
             clearForm();
         });

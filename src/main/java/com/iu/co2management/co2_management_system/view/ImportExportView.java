@@ -13,7 +13,6 @@ import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -153,12 +152,12 @@ public class ImportExportView extends VerticalLayout implements HasDynamicTitle 
         if (result.errors().isEmpty()) {
             String where = target == null ? "den eigenen Standort" : "Standort " + target.getName();
             resultBox.add(new Div(result.importedCount() + " Einträge für " + where + " importiert."));
-            Notification.show(result.importedCount() + " Einträge importiert", 3000, Notification.Position.BOTTOM_START);
+            Notifications.success(result.importedCount() + " Einträge importiert");
             csvArea.clear();
         } else {
             resultBox.add(errorLine("Import abgebrochen, es wurde nichts gespeichert:"));
             result.errors().forEach(error -> resultBox.add(errorLine(error)));
-            Notification.show("Import abgebrochen, bitte Fehler prüfen", 4000, Notification.Position.MIDDLE);
+            Notifications.error("Import abgebrochen, bitte Fehler prüfen");
         }
     }
 

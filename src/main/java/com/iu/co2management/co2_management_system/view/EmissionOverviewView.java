@@ -5,6 +5,7 @@ import com.iu.co2management.co2_management_system.entity.Location;
 import com.iu.co2management.co2_management_system.service.EmissionService;
 import com.iu.co2management.co2_management_system.service.LocationSummary;
 
+import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -109,11 +110,10 @@ public class EmissionOverviewView extends VerticalLayout {
         chartsRow.setPadding(false);
         chartsRow.getStyle().set("flex-wrap", "wrap");
 
-        grid.addColumn(row -> row.entry().getCategory()).setHeader("Kategorie");
-        grid.addColumn(row -> row.entry().getAmountKgCo2e()).setHeader("Menge (kg CO₂e)");
-        grid.addColumn(row -> row.entry().getDate()).setHeader("Datum");
-        grid.addColumn(Row::locationName).setHeader("Standort");
-
+        grid.addColumn(row -> row.entry().getCategory()).setHeader(new Html("<b>Kategorie</b>"));
+        grid.addColumn(row -> row.entry().getAmountKgCo2e()).setHeader(new Html("<b>Menge (kg CO₂e)</b>"));
+        grid.addColumn(row -> row.entry().getDate()).setHeader(new Html("<b>Datum</b>"));
+        grid.addColumn(Row::locationName).setHeader(new Html("<b>Standort</b>"));
         add(new H2("Emissionsübersicht"), locationLabel, topRow, chartsRow, grid);
 
         refresh();

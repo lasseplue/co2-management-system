@@ -41,10 +41,6 @@ public class MainLayout extends AppLayout {
         SideNav nav = new SideNav();
         nav.addItem(new SideNavItem("Emissionsübersicht", EmissionOverviewView.class));
 
-        if (roles.contains("ROLE_SUSTAINABILITY_OFFICER") || roles.contains("ROLE_ADMIN")) {
-            nav.addItem(new SideNavItem("Emissionen erfassen", EmissionEntryView.class));
-        }
-
         boolean canRecord = roles.contains("ROLE_SUSTAINABILITY_OFFICER") || roles.contains("ROLE_ADMIN");
 
         if (canRecord) {
