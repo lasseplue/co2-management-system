@@ -34,3 +34,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Vaadin (automatisch erzeugt) ###
+/frontend/
+/src/main/frontend/
