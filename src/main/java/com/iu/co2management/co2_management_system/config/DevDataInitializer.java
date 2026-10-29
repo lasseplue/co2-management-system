@@ -25,7 +25,7 @@ public class DevDataInitializer {
                                   EmissionEntryRepository emissionEntryRepository,
                                   PasswordEncoder passwordEncoder) {
         return args -> {
-            if (appUserRepository.count() > 0) {
+            if (appUserRepository.count() > 0 || locationRepository.count() > 0) {
                 return;
             }
 

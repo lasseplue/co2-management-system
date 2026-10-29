@@ -38,3 +38,6 @@ build/
 ### Vaadin (automatisch erzeugt) ###
 /frontend/
 /src/main/frontend/
+
+### data ###
+/data
